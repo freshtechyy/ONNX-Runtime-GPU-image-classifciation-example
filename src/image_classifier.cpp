@@ -174,7 +174,6 @@ int ImageClassifier::Inference(const std::string& imageFilepath) {
   CreateTensorFromImage(imageBGR, inputTensorValues);
 
   // Assign memory for input tensor
-  std::vector<const char*> inputNames{mInputName};
   // inputTensors will be used by the Session Run for inference
   std::vector<Ort::Value> inputTensors;
   Ort::MemoryInfo memoryInfo = Ort::MemoryInfo::CreateCpu(
@@ -188,7 +187,6 @@ int ImageClassifier::Inference(const std::string& imageFilepath) {
   std::vector<float> outputTensorValues(outputTensorSize);
 
   // Assign memory for output tensors
-  std::vector<const char*> outputNames{mOutputName};
   // outputTensors will be used by the Session Run for inference
   std::vector<Ort::Value> outputTensors;
   outputTensors.push_back(Ort::Value::CreateTensor<float>(
@@ -208,6 +206,8 @@ int ImageClassifier::Inference(const std::string& imageFilepath) {
   // 1 means number of inputs and outputs
   // InputTensors and OutputTensors, and inputNames and
   // outputNames are used in Session Run
+  std::vector<const char*> inputNames{mInputName};
+  std::vector<const char*> outputNames{mOutputName};
   mSession->Run(Ort::RunOptions{nullptr}, inputNames.data(),
                 inputTensors.data(), 1, outputNames.data(),
                 outputTensors.data(), 1);
@@ -242,7 +242,7 @@ void ImageClassifier::CreateTensorFromImage(
   cv::Mat imageRGB, scaledImage, preprocessedImage;
 
   /******* Preprocessing *******/
-  // Scale image pixels to [-1, 1]
+  // Scale image pixels from [0 255] to [-1, 1]
   img.convertTo(scaledImage, CV_32F, 2.0f / 255.0f, -1.0f);
   // Convert HWC to CHW
   cv::dnn::blobFromImage(scaledImage, preprocessedImage);
